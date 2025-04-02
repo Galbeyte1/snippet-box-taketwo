@@ -8,7 +8,7 @@ import (
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello from Snippetbox"))
+	w.Write([]byte("hello motto"))
 }
 
 func snippetView(w http.ResponseWriter, r *http.Request) {
@@ -23,15 +23,20 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(msg))
 }
 
-func snippetWrite(w http.ResponseWriter, r *http.Request) {
+func getSnippet(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display a form for writing a new snippet..."))
+}
+
+func postSnippet(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Save a new snippet..."))
 }
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/{$}", home) // Restrict to match only with {$}
-	mux.HandleFunc("/snippet/view/{id}", snippetView)
-	mux.HandleFunc("/snippet/write", snippetWrite)
+	mux.HandleFunc("GET /{$}", home) // Restrict to match only with {$}
+	mux.HandleFunc("GET /snippet/view/{id}", snippetView)
+	mux.HandleFunc("GET /snippet/write", getSnippet)
+	mux.HandleFunc("POST /snippet/write", postSnippet)
 
 	log.Print("starting server on :4000")
 
