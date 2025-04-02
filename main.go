@@ -19,7 +19,7 @@ func snippetWrite(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
+	mux.HandleFunc("/{$}", home) // Restrict to match only with {$}
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/write", snippetWrite)
 
