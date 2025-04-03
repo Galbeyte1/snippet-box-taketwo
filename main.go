@@ -8,7 +8,12 @@ import (
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("hello motto"))
+	w.Header().Add("Server", "Go")
+	w.Header().Set("Content-Type", "application/json")
+	// Set a new cache-control header. If an existing "Cache-Control" header exists
+	// it will be overwritten.
+	w.Header().Set("Cache-Control", "public, max-age=31536000")
+	w.Write([]byte(`{"name": "Galbeyte"}`))
 }
 
 func snippetView(w http.ResponseWriter, r *http.Request) {
@@ -19,8 +24,7 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := fmt.Sprintf("Display a specific snippet with ID %d...", id)
-	w.Write([]byte(msg))
+	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
 func getSnippet(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +32,7 @@ func getSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func postSnippet(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Save a new snippet..."))
 }
 
