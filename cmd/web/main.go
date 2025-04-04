@@ -5,41 +5,41 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-)
 
-type config struct {
-	addr      string
-	staticDir string
-}
+	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
+	"github.com/Galbeyte1/snippet-box-taketwo/internal/transport"
+)
 
 func main() {
 
-	var cfg config
+	var cfg config.Config
 
-	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
-	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
+	flag.StringVar(&cfg.Addr, "addr", ":4000", "HTTP network address")
+	flag.StringVar(&cfg.StaticDir, "static-dir", "./ui/static", "Path to static assets")
 	flag.Parse()
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level:     slog.LevelDebug,
-		AddSource: true,
-	}))
+	app := &config.Application{
+		Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     slog.LevelDebug,
+			AddSource: true,
+		})),
+	}
 
 	mux := http.NewServeMux()
 
-	fileServer := http.FileServer(http.Dir(cfg.staticDir))
+	fileServer := http.FileServer(http.Dir(cfg.StaticDir))
 
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	mux.HandleFunc("GET /{$}", home)
-	mux.HandleFunc("GET /snippet/view", snippetView)
-	mux.HandleFunc("GET /snippet/create", snippetCreate)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+	mux.HandleFunc("GET /{$}", transport.Home(app))
+	mux.HandleFunc("GET /snippet/view", transport.SnippetView(app))
+	mux.HandleFunc("GET /snippet/create", transport.SnippetCreate(app))
+	mux.HandleFunc("POST /snippet/create", transport.SnippetCreatePost(app))
 
-	logger.Info("starting server", slog.String("addr", cfg.addr))
+	app.Logger.Info("starting server", slog.String("addr", cfg.Addr))
 
-	err := http.ListenAndServe(cfg.addr, mux)
-	logger.Error(err.Error())
+	err := http.ListenAndServe(cfg.Addr, mux)
+	app.Logger.Error(err.Error())
 	os.Exit(1)
 
 }
