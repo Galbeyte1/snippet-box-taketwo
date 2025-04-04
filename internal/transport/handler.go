@@ -10,7 +10,7 @@ import (
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/helpers"
 )
 
-func Home(app *config.Application) http.HandlerFunc {
+func home(app *config.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Server", "Go")
 
@@ -33,7 +33,7 @@ func Home(app *config.Application) http.HandlerFunc {
 	}
 }
 
-func SnippetView(app *config.Application) http.HandlerFunc {
+func snippetView(app *config.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil || id < 1 {
@@ -44,13 +44,13 @@ func SnippetView(app *config.Application) http.HandlerFunc {
 	}
 }
 
-func SnippetCreate(app *config.Application) http.HandlerFunc {
+func snippetCreate(app *config.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Display a form for creating a new snippet..."))
 	}
 }
 
-func SnippetCreatePost(app *config.Application) http.HandlerFunc {
+func snippetCreatePost(app *config.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("Save a new snippet..."))
