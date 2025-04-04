@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
+	"github.com/Galbeyte1/snippet-box-taketwo/internal/helpers"
 )
 
 func Home(app *config.Application) http.HandlerFunc {
@@ -21,15 +22,13 @@ func Home(app *config.Application) http.HandlerFunc {
 
 		ts, err := template.ParseFiles(files...)
 		if err != nil {
-			app.Logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			helpers.ServerError(app, err)
 			return
 		}
 
 		err = ts.ExecuteTemplate(w, "base", nil)
 		if err != nil {
-			app.Logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			helpers.ServerError(app, err)
 		}
 	}
 }
