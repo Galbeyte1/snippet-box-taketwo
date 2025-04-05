@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
+	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/transport"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -33,6 +34,7 @@ func main() {
 		app.Logger.Error(err.Error())
 		os.Exit(1)
 	}
+	app.Snippets = &models.SnippetModel{DB: db}
 
 	defer db.Close()
 
