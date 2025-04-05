@@ -9,4 +9,5 @@ type Application struct {
 type Config struct {
 	Addr      string
 	StaticDir string
+	DSN       string
 }
