@@ -3,6 +3,7 @@ package transport
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,7 +11,19 @@ import (
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/helpers"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
+	"github.com/Galbeyte1/snippet-box-taketwo/internal/templates"
 )
+
+/*
+File Server and Template Parsing example
+
+Step	Browser action												Go server reaction
+1 		Browser requests http://localhost:8080/static/style.css		FileServer looks inside ./static/style.css and streams it
+2		Browser requests http://localhost:8080/						HomeHandler runs, tmpl.Execute renders index.html with Name = "Alice"
+3		index.html links to static/style.css						Browser automatically requests style.css, served again by FileServer
+
+Building a server cache for templates WHILE file server caching handled by os/browser
+*/
 
 func home(app *config.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +73,27 @@ func snippetView(app *config.Application) http.HandlerFunc {
 			}
 			return
 		}
-		fmt.Fprintf(w, "%+v", snippet)
+
+		files := []string{
+			"./ui/html/base.tmpl",
+			"./ui/html/partials/nav.tmpl",
+			"./ui/html/pages/view.tmpl",
+		}
+
+		ts, err := template.ParseFiles(files...)
+		if err != nil {
+			helpers.ServerError(app, err)
+			return
+		}
+
+		data := templates.TemplateData{
+			Snippet: snippet,
+		}
+
+		err = ts.ExecuteTemplate(w, "base", data)
+		if err != nil {
+			helpers.ServerError(app, err)
+		}
 	}
 
 }
