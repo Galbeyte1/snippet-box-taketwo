@@ -35,26 +35,26 @@ func home(app *config.Application) http.HandlerFunc {
 			return
 		}
 
-		for _, snippet := range snippets {
-			fmt.Fprintf(w, "%+v\n", snippet)
+		files := []string{
+			"./ui/html/base.tmpl",
+			"./ui/html/partials/nav.tmpl",
+			"./ui/html/pages/home.tmpl",
 		}
 
-		// files := []string{
-		// 	"./ui/html/base.tmpl",
-		// 	"./ui/html/partials/nav.tmpl",
-		// 	"./ui/html/pages/home.tmpl",
-		// }
+		ts, err := template.ParseFiles(files...)
+		if err != nil {
+			helpers.ServerError(app, err)
+			return
+		}
 
-		// ts, err := template.ParseFiles(files...)
-		// if err != nil {
-		// 	helpers.ServerError(app, err)
-		// 	return
-		// }
+		data := templates.TemplateData{
+			Snippets: snippets,
+		}
 
-		// err = ts.ExecuteTemplate(w, "base", nil)
-		// if err != nil {
-		// 	helpers.ServerError(app, err)
-		// }
+		err = ts.ExecuteTemplate(w, "base", data)
+		if err != nil {
+			helpers.ServerError(app, err)
+		}
 	}
 }
 
