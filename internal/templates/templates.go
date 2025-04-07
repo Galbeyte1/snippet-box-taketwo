@@ -2,14 +2,17 @@ package templates
 
 import (
 	"html/template"
+	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
 )
 
 type TemplateData struct {
-	Snippet  models.Snippet
-	Snippets []models.Snippet
+	CurrentYear int
+	Snippet     models.Snippet
+	Snippets    []models.Snippet
 }
 
 func NewTemplateCache() (map[string]*template.Template, error) {
@@ -42,4 +45,10 @@ func NewTemplateCache() (map[string]*template.Template, error) {
 	}
 
 	return cache, nil
+}
+
+func NewTemplateData(r *http.Request) TemplateData {
+	return TemplateData{
+		CurrentYear: time.Now().Year(),
+	}
 }
