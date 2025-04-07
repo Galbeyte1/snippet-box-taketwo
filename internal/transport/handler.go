@@ -25,7 +25,7 @@ Building a server cache for templates WHILE file server caching handled by os/br
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.Snippets.Latest()
 	if err != nil {
-		app.ServerError(err)
+		app.ServerError(w, r, err)
 		return
 	}
 	app.Render(w, r, http.StatusOK, "home.tmpl", templates.TemplateData{
@@ -43,7 +43,7 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, models.ErrNotRecord) {
 			http.NotFound(w, r)
 		} else {
-			app.ServerError(err)
+			app.ServerError(w, r, err)
 		}
 		return
 	}
@@ -66,7 +66,7 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	content := `ارحل بنفسك من أرضٍ تضامُ بها ولا تكنْ من فراقِ الأهلِ في حرقِ فالعنبر الخام روثٌ في مواطنه وفي التغربِ محمولٌ على العنقِ والكحلُ نوعٌ من الأحجارِ تنظره في أرضه وهو مرميٌ على الطرقِ لما تغربَ حاز الفضل أجمعه فصار يُحملُ بين الجفنِ والحدقِ`
 	id, err := app.Snippets.Insert(title, content, expires)
 	if err != nil {
-		app.ServerError(err)
+		app.ServerError(w, r, err)
 		return
 	}
 	log.Println("Successfully inserted snippet with ID", id) // <-- And this

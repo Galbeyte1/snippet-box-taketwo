@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 
@@ -11,14 +12,18 @@ func (app *Application) Render(w http.ResponseWriter, r *http.Request, status in
 	ts, ok := app.TemplateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
-		app.ServerError(err)
+		app.ServerError(w, r, err)
+		return
+	}
+
+	buf := new(bytes.Buffer)
+	err := ts.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		app.ServerError(w, r, err)
 		return
 	}
 
 	w.WriteHeader(status)
 
-	err := ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.ServerError(err)
-	}
+	buf.WriteTo(w)
 }
