@@ -299,6 +299,10 @@ tr:nth-child(even) {
     background: #f7efdb;
     border-top: 1px solid #e0d7b6;
     border-bottom: 1px solid #e0d7b6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    overflow-x: auto;
 }
 
 .snippet .metadata {
