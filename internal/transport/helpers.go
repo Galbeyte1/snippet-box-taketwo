@@ -1,12 +1,10 @@
-package helpers
+package transport
 
 import (
 	"net/http"
-
-	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
 )
 
-func ServerError(app *config.Application, err error) http.HandlerFunc {
+func (app *Application) ServerError(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			method = r.Method
@@ -19,6 +17,6 @@ func ServerError(app *config.Application, err error) http.HandlerFunc {
 	}
 }
 
-func ClientError(app *config.Application, w http.ResponseWriter, status int) {
+func (app *Application) ClientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }

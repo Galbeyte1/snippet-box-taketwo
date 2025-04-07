@@ -9,6 +9,7 @@ import (
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
+	"github.com/Galbeyte1/snippet-box-taketwo/internal/templates"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/transport"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -22,7 +23,7 @@ func main() {
 	flag.StringVar(&cfg.DSN, "dsn", "web:YES@/snippetbox?parseTime=true", "web:YES@/snippetbox?parseTime=true")
 	flag.Parse()
 
-	app := &config.Application{
+	app := &transport.Application{
 		Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level:     slog.LevelDebug,
 			AddSource: true,
@@ -38,9 +39,16 @@ func main() {
 
 	defer db.Close()
 
+	templateCache, err := templates.NewTemplateCache()
+	if err != nil {
+		app.Logger.Error(err.Error())
+		os.Exit(1)
+	}
+	app.TemplateCache = templateCache
+
 	app.Logger.Info("starting server", slog.String("addr", cfg.Addr))
 
-	err = http.ListenAndServe(cfg.Addr, transport.Routes(app, cfg))
+	err = http.ListenAndServe(cfg.Addr, app.Routes(cfg))
 	app.Logger.Error(err.Error())
 	os.Exit(1)
 
