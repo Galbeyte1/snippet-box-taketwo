@@ -6,7 +6,7 @@ import (
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
 )
 
-func (app *Application) Routes(cfg config.Config) *http.ServeMux {
+func (app *Application) Routes(cfg config.Config) http.Handler {
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(http.Dir(cfg.StaticDir))
@@ -18,5 +18,5 @@ func (app *Application) Routes(cfg config.Config) *http.ServeMux {
 	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
 	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
 
-	return mux
+	return commonHeaders(mux)
 }
