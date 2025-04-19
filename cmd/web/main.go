@@ -11,6 +11,7 @@ import (
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/templates"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/transport"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -28,6 +29,7 @@ func main() {
 			Level: slog.LevelDebug,
 			// AddSource: true,
 		})),
+		FormDecoder: form.NewDecoder(),
 	}
 
 	db, err := openDB(cfg.DSN)
