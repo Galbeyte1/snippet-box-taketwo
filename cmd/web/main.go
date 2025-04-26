@@ -6,11 +6,14 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/templates"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/transport"
+	"github.com/alexedwards/scs/stores/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -21,7 +24,7 @@ func main() {
 
 	flag.StringVar(&cfg.Addr, "addr", ":4000", "HTTP network address")
 	flag.StringVar(&cfg.StaticDir, "static-dir", "./ui/static", "Path to static assets")
-	flag.StringVar(&cfg.DSN, "dsn", "web:YES@/snippetbox?parseTime=true", "web:YES@/snippetbox?parseTime=true")
+	flag.StringVar(&cfg.DSN, "dsn", "web:pass@/snippetbox?parseTime=true", "MySQL DSN for connecting to snippetbox database")
 	flag.Parse()
 
 	app := &transport.Application{
@@ -40,6 +43,11 @@ func main() {
 	app.Snippets = &models.SnippetModel{DB: db}
 
 	defer db.Close()
+
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+	app.SessionManager = sessionManager
 
 	templateCache, err := templates.NewTemplateCache()
 	if err != nil {
