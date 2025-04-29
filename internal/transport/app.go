@@ -5,14 +5,14 @@ import (
 	"log/slog"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
-	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
+	"github.com/gorilla/sessions"
 )
 
 type Application struct {
-	Logger         *slog.Logger
-	Snippets       *models.SnippetModel
-	TemplateCache  map[string]*template.Template
-	FormDecoder    *form.Decoder
-	SessionManager *scs.SessionManager
+	Logger        *slog.Logger
+	Snippets      *models.SnippetModel
+	TemplateCache map[string]*template.Template
+	FormDecoder   *form.Decoder
+	SessionStore  sessions.Store
 }

@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0 # ← use MySQL, not Postgres
+    container_name: snippetbox-database
+    ports:
+      - "3306:3306" # ← expose MySQL port
+    env_file:
+      - db.env
+    networks:
+      - fullstack
+    volumes:
+      - database_mysql:/var/lib/mysql # ← volume for persistence
+  
+  redis:
+    image: redis:7-alpine
+    container_name: snippetbox-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - fullstack
+
+  api:
+    build: .
+    image: snippetbox-server
+    container_name: snippetbox-server
+    env_file:
+      - dev.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - fullstack
+
+volumes:
+  database_mysql:
+
+networks:
+  fullstack:
+    driver: bridge

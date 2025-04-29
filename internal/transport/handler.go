@@ -58,6 +58,15 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 	data := templates.NewTemplateData(r)
 	data.Snippet = snippet
 
+	session, err := app.SessionStore.Get(r, "flash")
+	if err == nil {
+		flashes := session.Flashes()
+		if len(flashes) > 0 {
+			data.Flash = flashes[0].(string)
+			_ = session.Save(r, w)
+		}
+	}
+
 	app.Render(w, r, http.StatusOK, "view.tmpl", data)
 }
 
@@ -95,6 +104,20 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	}
 
 	id, err := app.Snippets.Insert(form.Title, form.Content, form.Expires)
+	if err != nil {
+		app.ServerError(w, r, err)
+		return
+	}
+
+	session, err := app.SessionStore.Get(r, "flash")
+	if err != nil {
+		app.ServerError(w, r, err)
+		return
+	}
+
+	session.AddFlash("Snippet successfully created!")
+
+	err = session.Save(r, w)
 	if err != nil {
 		app.ServerError(w, r, err)
 		return
