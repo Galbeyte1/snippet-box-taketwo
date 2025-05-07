@@ -92,9 +92,14 @@ func main() {
 	}
 	app.TemplateCache = templateCache
 
-	app.Logger.Info("starting server", slog.String("addr", cfg.APIAddr))
+	srv := &http.Server{
+		Addr:    cfg.APIAddr,
+		Handler: app.Routes(cfg),
+	}
 
-	err = http.ListenAndServe(cfg.APIAddr, app.Routes(cfg))
+	app.Logger.Info("starting server", slog.String("addr", srv.Addr))
+
+	err = srv.ListenAndServe()
 	app.Logger.Error(err.Error())
 	os.Exit(1)
 
