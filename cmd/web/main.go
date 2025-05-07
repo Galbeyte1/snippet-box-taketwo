@@ -38,11 +38,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+		// AddSource: true,
+	}))
+
 	app := &transport.Application{
-		Logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-			// AddSource: true,
-		})),
+		Logger:      logger,
 		FormDecoder: form.NewDecoder(),
 	}
 
@@ -93,8 +95,9 @@ func main() {
 	app.TemplateCache = templateCache
 
 	srv := &http.Server{
-		Addr:    cfg.APIAddr,
-		Handler: app.Routes(cfg),
+		Addr:     cfg.APIAddr,
+		Handler:  app.Routes(cfg),
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
 	app.Logger.Info("starting server", slog.String("addr", srv.Addr))
