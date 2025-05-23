@@ -102,7 +102,16 @@ func main() {
 
 	app.Logger.Info("starting server", slog.String("addr", srv.Addr))
 
-	err = srv.ListenAndServe()
+	go func() {
+		err := http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			target := "https://" + r.Host + r.URL.RequestURI()
+			http.Redirect(w, r, target, http.StatusMovedPermanently)
+		}))
+		if err != nil {
+			app.Logger.Error("HTTP redirect server failed: " + err.Error())
+		}
+	}()
+	err = srv.ListenAndServeTLS("/tls/cert.pem", "/tls/key.pem")
 	app.Logger.Error(err.Error())
 	os.Exit(1)
 

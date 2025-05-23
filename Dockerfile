@@ -22,6 +22,7 @@ RUN apk --no-cache add ca-certificates
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/app .
 COPY --from=builder /app/ui ./ui
+COPY --from=builder /app/tls ./tls
 
 # Specify the command to execute this app compiled binary
 CMD ["./app"]
