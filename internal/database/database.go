@@ -7,19 +7,6 @@ import (
 	"time"
 )
 
-type DBConfig struct {
-	Username string
-	Password string
-	Database string
-	Host     string
-	Port     string
-}
-
-func (cfg DBConfig) DSN() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.Database)
-}
-
 func OpenDB(dsn string) (*sql.DB, error) {
 	var db *sql.DB
 	var err error

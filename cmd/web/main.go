@@ -68,7 +68,7 @@ func main() {
 
 	app.Snippets = &models.SnippetModel{DB: db}
 
-	pool := cfg.Redis.OpenRedis()
+	pool := database.OpenRedis(*cfg.Redis)
 
 	store, err := redistore.NewRediStoreWithPool(pool, []byte(cfg.SessionKey))
 	if err != nil {
@@ -95,9 +95,10 @@ func main() {
 	app.TemplateCache = templateCache
 
 	srv := &http.Server{
-		Addr:     cfg.APIAddr,
-		Handler:  app.Routes(cfg),
-		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		Addr:      cfg.APIAddr,
+		Handler:   app.Routes(cfg),
+		ErrorLog:  slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		TLSConfig: cfg.TLSOpts.Config,
 	}
 
 	app.Logger.Info("starting server", slog.String("addr", srv.Addr))
