@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/database"
@@ -95,10 +96,13 @@ func main() {
 	app.TemplateCache = templateCache
 
 	srv := &http.Server{
-		Addr:      cfg.APIAddr,
-		Handler:   app.Routes(cfg),
-		ErrorLog:  slog.NewLogLogger(logger.Handler(), slog.LevelError),
-		TLSConfig: cfg.TLSOpts.Config,
+		Addr:         cfg.APIAddr,
+		Handler:      app.Routes(cfg),
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		TLSConfig:    cfg.TLSOpts.Config,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	app.Logger.Info("starting server", slog.String("addr", srv.Addr))
