@@ -5,3 +5,12 @@ CREATE TABLE IF NOT EXISTS snippets (
     created DATETIME NOT NULL,
     expires DATETIME NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    hashed_password CHAR(68) NOT NULL,
+    created DATETIME NOT NULL
+);
+ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);

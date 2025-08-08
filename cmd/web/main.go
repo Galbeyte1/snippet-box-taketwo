@@ -68,6 +68,7 @@ func main() {
 	// }
 
 	app.Snippets = &models.SnippetModel{DB: db}
+	app.Users = &models.UserModel{DB: db}
 
 	pool := database.OpenRedis(*cfg.Redis)
 

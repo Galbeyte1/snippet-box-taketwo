@@ -12,6 +12,7 @@ import (
 type Application struct {
 	Logger        *slog.Logger
 	Snippets      *models.SnippetModel
+	Users         *models.UserModel
 	TemplateCache map[string]*template.Template
 	FormDecoder   *form.Decoder
 	SessionStore  sessions.Store

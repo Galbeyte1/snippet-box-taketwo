@@ -29,6 +29,13 @@ type snippetCreateForm struct {
 	validator.Validator `form:"-"`
 }
 
+type userSignupForm struct {
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.Snippets.Latest()
 	if err != nil {
@@ -127,11 +134,64 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 }
 
 func (app *Application) userSignup(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Display a form for signing up a new user...")
+	data := templates.NewTemplateData(r)
+	data.Form = userSignupForm{}
+	app.Render(w, r, http.StatusOK, "signup.tmpl", data)
 }
 
 func (app *Application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Create a new user...")
+	var form userSignupForm
+
+	err := app.DecodePostForm(r, &form)
+	if err != nil {
+		app.ClientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be atleast 8 characters long")
+
+	if !form.Valid() {
+		data := templates.NewTemplateData(r)
+		data.Form = form
+		app.Render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		return
+	}
+
+	err = app.Users.Insert(form.Name, form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			form.AddFieldError("email", "Email address is already in use")
+
+			data := templates.NewTemplateData(r)
+			data.Form = form
+			app.Render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		} else {
+			app.ServerError(w, r, err)
+		}
+
+		return
+	}
+
+	session, err := app.SessionStore.Get(r, "flash")
+	if err != nil {
+		app.ServerError(w, r, err)
+		return
+	}
+
+	session.AddFlash("Your signup was successful. Please log in")
+
+	err = session.Save(r, w)
+	if err != nil {
+		app.ServerError(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+
 }
 
 func (app *Application) userLogin(w http.ResponseWriter, r *http.Request) {
