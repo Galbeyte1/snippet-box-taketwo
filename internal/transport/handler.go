@@ -36,6 +36,12 @@ type userSignupForm struct {
 	validator.Validator `form:"-"`
 }
 
+type userLoginForm struct {
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.Snippets.Latest()
 	if err != nil {
@@ -43,6 +49,7 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := templates.NewTemplateData(r)
+	data.Flash = app.PopFlash(w, r)
 	data.Snippets = snippets
 	app.Render(w, r, http.StatusOK, "home.tmpl", data)
 }
@@ -51,6 +58,7 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
+		return
 	}
 	snippet, err := app.Snippets.Get(id)
 	if err != nil {
@@ -64,22 +72,14 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	data := templates.NewTemplateData(r)
 	data.Snippet = snippet
-
-	session, err := app.SessionStore.Get(r, "flash")
-	if err == nil {
-		flashes := session.Flashes()
-		if len(flashes) > 0 {
-			data.Flash = flashes[0].(string)
-			_ = session.Save(r, w)
-		}
-	}
+	data.Flash = app.PopFlash(w, r)
 
 	app.Render(w, r, http.StatusOK, "view.tmpl", data)
 }
 
 func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := templates.NewTemplateData(r)
-
+	data.Flash = app.PopFlash(w, r)
 	data.Form = snippetCreateForm{
 		Expires: 365,
 	}
@@ -135,6 +135,7 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 func (app *Application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := templates.NewTemplateData(r)
+	data.Flash = app.PopFlash(w, r)
 	data.Form = userSignupForm{}
 	app.Render(w, r, http.StatusOK, "signup.tmpl", data)
 }
@@ -195,13 +196,72 @@ func (app *Application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) userLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Display a form for logging in a user...")
+	// This will serve/display the Login page template login.tmpl
+	data := templates.NewTemplateData(r)
+	data.Flash = app.PopFlash(w, r)
+	data.Form = userLoginForm{}
+	app.Render(w, r, http.StatusOK, "login.tmpl", data)
 }
 
 func (app *Application) userLoginPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Authenticates a new user...")
+	var form userLoginForm
+
+	err := app.DecodePostForm(r, &form)
+	if err != nil {
+		app.ClientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+
+	if !form.Valid() {
+		// Serve up the page again
+		data := templates.NewTemplateData(r)
+		data.Form = form
+		app.Render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
+		return
+	}
+
+	id, err := app.Users.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddNonFieldError("Email or password is incorrect")
+
+			// Serve up the page again
+			data := templates.NewTemplateData(r)
+			data.Form = form
+			app.Render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
+		} else {
+			app.ServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.RenewSession(w, r, id); err != nil {
+		app.ServerError(w, r, err)
+		return
+	}
+
+	// flash message upon login
+	if flash, err := app.SessionStore.Get(r, "flash"); err == nil {
+		flash.AddFlash("Welcome back!")
+		_ = flash.Save(r, w)
+	}
+
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+
 }
 
 func (app *Application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Logout the user...")
+	sess, _ := app.SessionStore.Get(r, "session")
+	sess.Options.MaxAge = -1
+	_ = sess.Save(r, w)
+
+	flash, _ := app.SessionStore.Get(r, "flash")
+	flash.AddFlash("You've been logged out successfully!")
+	_ = flash.Save(r, w)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

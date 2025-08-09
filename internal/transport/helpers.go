@@ -7,6 +7,24 @@ import (
 	"github.com/go-playground/form/v4"
 )
 
+func (app *Application) PopFlash(w http.ResponseWriter, r *http.Request) string {
+	sess, err := app.SessionStore.Get(r, "flash")
+	if err != nil {
+		return ""
+	}
+
+	flashes := sess.Flashes()
+	if len(flashes) == 0 {
+		return ""
+	}
+
+	_ = sess.Save(r, w)
+	if msg, ok := flashes[0].(string); ok {
+		return msg
+	}
+	return ""
+}
+
 func (app *Application) DecodePostForm(r *http.Request, dst any) error {
 	err := r.ParseForm()
 	if err != nil {
