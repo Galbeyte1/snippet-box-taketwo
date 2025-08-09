@@ -49,6 +49,7 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := templates.NewTemplateData(r)
+	data.IsAuthenticated = app.isAuthenticated(r)
 	data.Flash = app.PopFlash(w, r)
 	data.Snippets = snippets
 	app.Render(w, r, http.StatusOK, "home.tmpl", data)
@@ -71,6 +72,7 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := templates.NewTemplateData(r)
+	data.IsAuthenticated = app.isAuthenticated(r)
 	data.Snippet = snippet
 	data.Flash = app.PopFlash(w, r)
 
@@ -79,6 +81,7 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := templates.NewTemplateData(r)
+	data.IsAuthenticated = app.isAuthenticated(r)
 	data.Flash = app.PopFlash(w, r)
 	data.Form = snippetCreateForm{
 		Expires: 365,
@@ -105,6 +108,7 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 	if !form.Valid() {
 		data := templates.NewTemplateData(r)
+		data.IsAuthenticated = app.isAuthenticated(r)
 		data.Form = form
 		app.Render(w, r, http.StatusUnprocessableEntity, "create.tmpl", data)
 		return
@@ -135,6 +139,7 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 func (app *Application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := templates.NewTemplateData(r)
+	data.IsAuthenticated = app.isAuthenticated(r)
 	data.Flash = app.PopFlash(w, r)
 	data.Form = userSignupForm{}
 	app.Render(w, r, http.StatusOK, "signup.tmpl", data)
@@ -157,6 +162,7 @@ func (app *Application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	if !form.Valid() {
 		data := templates.NewTemplateData(r)
+		data.IsAuthenticated = app.isAuthenticated(r)
 		data.Form = form
 		app.Render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
 		return
@@ -168,6 +174,7 @@ func (app *Application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 			form.AddFieldError("email", "Email address is already in use")
 
 			data := templates.NewTemplateData(r)
+			data.IsAuthenticated = app.isAuthenticated(r)
 			data.Form = form
 			app.Render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
 		} else {
@@ -198,6 +205,7 @@ func (app *Application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 func (app *Application) userLogin(w http.ResponseWriter, r *http.Request) {
 	// This will serve/display the Login page template login.tmpl
 	data := templates.NewTemplateData(r)
+	data.IsAuthenticated = app.isAuthenticated(r)
 	data.Flash = app.PopFlash(w, r)
 	data.Form = userLoginForm{}
 	app.Render(w, r, http.StatusOK, "login.tmpl", data)
@@ -219,6 +227,7 @@ func (app *Application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		// Serve up the page again
 		data := templates.NewTemplateData(r)
+		data.IsAuthenticated = app.isAuthenticated(r)
 		data.Form = form
 		app.Render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
 		return
@@ -231,6 +240,7 @@ func (app *Application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 			// Serve up the page again
 			data := templates.NewTemplateData(r)
+			data.IsAuthenticated = app.isAuthenticated(r)
 			data.Form = form
 			app.Render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
 		} else {
