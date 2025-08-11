@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/models"
+	"github.com/justinas/nosurf"
 )
 
 type TemplateData struct {
@@ -16,6 +17,7 @@ type TemplateData struct {
 	Form            any
 	Flash           string
 	IsAuthenticated bool
+	CSRFToken       string
 }
 
 func humanDate(t time.Time) string {
@@ -62,5 +64,6 @@ func NewTemplateCache() (map[string]*template.Template, error) {
 func NewTemplateData(r *http.Request) TemplateData {
 	return TemplateData{
 		CurrentYear: time.Now().Year(),
+		CSRFToken:   nosurf.Token(r),
 	}
 }

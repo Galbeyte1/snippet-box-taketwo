@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Galbeyte1/snippet-box-taketwo/internal/config"
+	"github.com/justinas/alice"
 )
 
 func (app *Application) Routes(cfg config.Config) http.Handler {
@@ -13,16 +14,31 @@ func (app *Application) Routes(cfg config.Config) http.Handler {
 
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	mux.HandleFunc("GET /{$}", app.home)
-	mux.HandleFunc("GET /snippet/view/{id}", app.snippetView)
-	mux.HandleFunc("GET /snippet/create", app.protect(app.snippetCreate))
-	mux.HandleFunc("POST /snippet/create", app.protect(app.snippetCreatePost))
+	// Dynamic (CSRF only, since Gorilla doesn’t have LoadAndSave)
+	dynamic := alice.New(
+		noSurf,
+	)
 
-	mux.HandleFunc("GET /user/signup", app.userSignup)
-	mux.HandleFunc("POST /user/signup", app.userSignupPost)
-	mux.HandleFunc("GET /user/login", app.userLogin)
-	mux.HandleFunc("POST /user/login", app.userLoginPost)
-	mux.HandleFunc("POST /user/logout", app.protect(app.userLogoutPost))
+	// Public dynamic
+	mux.Handle("GET /{$}", dynamic.ThenFunc(app.home))
+	mux.Handle("GET /snippet/view/{id}", dynamic.ThenFunc(app.snippetView))
+	mux.Handle("GET /user/signup", dynamic.ThenFunc(app.userSignup))
+	mux.Handle("POST /user/signup", dynamic.ThenFunc(app.userSignupPost))
+	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
+	mux.Handle("POST /user/login", dynamic.ThenFunc(app.userLoginPost))
 
-	return app.recoverPanic(app.logRequest(commonHeaders(mux)))
+	// Protected dynamic (auth on top)
+	protected := dynamic.Append(app.requireAuthentication)
+	mux.Handle("GET /snippet/create", protected.ThenFunc(app.snippetCreate))
+	mux.Handle("POST /snippet/create", protected.ThenFunc(app.snippetCreatePost))
+	mux.Handle("POST /user/logout", protected.ThenFunc(app.userLogoutPost))
+
+	// Standard across everything
+	standard := alice.New(
+		app.recoverPanic,
+		app.logRequest,
+		commonHeaders,
+	)
+
+	return standard.Then(mux)
 }

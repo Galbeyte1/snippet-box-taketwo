@@ -3,6 +3,8 @@ package transport
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/justinas/nosurf"
 )
 
 func commonHeaders(next http.Handler) http.Handler {
@@ -10,7 +12,7 @@ func commonHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
 
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
-		w.Header().Set("X-content-Type-Options", "nosniff")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "deny")
 		w.Header().Set("X-XSS-Protection", "0")
 
@@ -60,10 +62,12 @@ func (app *Application) requireAuthentication(next http.Handler) http.Handler {
 	})
 }
 
-// Protect uses requireAuthentication
-// protect keeps the HandleFunc style by returning an http.HandlerFunc
-func (app *Application) protect(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		app.requireAuthentication(h).ServeHTTP(w, r)
-	}
+func noSurf(next http.Handler) http.Handler {
+	csrfHandler := nosurf.New(next)
+	csrfHandler.SetBaseCookie(http.Cookie{
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+	})
+	return csrfHandler
 }
