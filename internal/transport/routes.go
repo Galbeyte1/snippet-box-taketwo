@@ -17,6 +17,7 @@ func (app *Application) Routes(cfg config.Config) http.Handler {
 	// Dynamic (CSRF only, since Gorilla doesn’t have LoadAndSave)
 	dynamic := alice.New(
 		noSurf,
+		app.Authenticate,
 	)
 
 	// Public dynamic

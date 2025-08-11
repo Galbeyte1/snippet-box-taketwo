@@ -71,3 +71,22 @@ func noSurf(next http.Handler) http.Handler {
 	})
 	return csrfHandler
 }
+
+func (app *Application) Authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sess, err := app.SessionStore.Get(r, sessionName)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		id, _ := sess.Values[sessionUserIDKey].(int)
+		if id > 0 {
+			if ok, _ := app.Users.Exists(id); ok {
+				r = r.WithContext(withIsAuthenticated(r.Context(), true))
+			}
+
+		}
+		next.ServeHTTP(w, r)
+	})
+}
